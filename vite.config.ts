@@ -6,9 +6,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ command }) => {
   const isProd = command === 'build';
-  const rawBasePath = process.env.VITE_BASE_PATH || (isProd ? './' : '/');
+  const configuredBasePath =
+    process.env.VITE_BASE_PATH || (isProd ? '/HomeShelf' : '/');
   // Ensure appropriate trailing slash or relative path
-  const basePath = rawBasePath.startsWith('./') ? './' : (rawBasePath.endsWith('/') ? rawBasePath : `${rawBasePath}/`);
+  const basePath =
+    configuredBasePath.endsWith('/') ? configuredBasePath : (
+      `${configuredBasePath}/`
+    );
 
   return {
     base: basePath,
