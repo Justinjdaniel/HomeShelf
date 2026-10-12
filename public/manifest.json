@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "HomeShelf Intelligent Inventory",
+  "short_name": "HomeShelf",
+  "description": "Offline-first domestic inventory and pantry ledger with real-time barcode scanning.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1326",
+  "theme_color": "#0b1326",
+  "categories": ["lifestyle", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
