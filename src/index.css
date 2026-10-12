@@ -71,3 +71,42 @@
 .trim-text-box {
   text-box: trim-both cap alphabetic;
 }
+
+/* Native View Transitions API support with reduced-motion check */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
+/* CSS Scroll-Driven Animations for sticky header elevation */
+@supports (animation-timeline: scroll()) {
+  @keyframes headerElevation {
+    from {
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      backdrop-filter: blur(12px);
+    }
+    to {
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(24px);
+    }
+  }
+
+  header.sticky-elevate {
+    animation: headerElevation linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 80px;
+  }
+}
+

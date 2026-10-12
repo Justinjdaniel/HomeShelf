@@ -1,15 +1,14 @@
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import { defineConfig } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(() => {
-  const configuredBasePath = process.env.VITE_BASE_PATH || '/';
-  const basePath =
-    configuredBasePath.endsWith('/') ? configuredBasePath : (
-      `${configuredBasePath}/`
-    );
+export default defineConfig(({ command }) => {
+  const isProd = command === 'build';
+  const rawBasePath = process.env.VITE_BASE_PATH || (isProd ? './' : '/');
+  // Ensure appropriate trailing slash or relative path
+  const basePath = rawBasePath.startsWith('./') ? './' : (rawBasePath.endsWith('/') ? rawBasePath : `${rawBasePath}/`);
 
   return {
     base: basePath,
@@ -18,45 +17,47 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        injectRegister: 'auto',
         includeAssets: [
           'favicon.svg',
           'icon.svg',
           'apple-touch-icon.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
+          'pwa-maskable-512x512.png',
         ],
         manifest: {
-          id: basePath,
-          name: 'HomeShelf',
+          id: './',
+          name: 'HomeShelf - Intelligent Home Inventory & Shelf Ledger',
           short_name: 'HomeShelf',
-          description:
-            'Intelligent offline-first home inventory, shelf ledger, and zero-waste pantry manager with real-time barcode scanning and local database persistence.',
-          theme_color: '#0f172a',
-          background_color: '#f5f5f4',
+          description: 'Intelligent offline-first home inventory, shelf ledger, and zero-waste pantry manager with real-time barcode scanning and local database persistence.',
+          theme_color: '#0b1326',
+          background_color: '#0b1326',
           display: 'standalone',
-          start_url: basePath,
-          scope: basePath,
+          orientation: 'portrait-primary',
+          start_url: './',
+          scope: './',
           icons: [
             {
-              src: `${basePath}pwa-192x192.png`,
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: `${basePath}pwa-512x512.png`,
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: `${basePath}pwa-maskable-512x512.png`,
+              src: 'pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
             },
             {
-              src: `${basePath}icon.svg`,
+              src: 'icon.svg',
               sizes: 'any',
               type: 'image/svg+xml',
               purpose: 'any',
@@ -97,16 +98,18 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
+          enabled: false,
         },
       }),
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve('.'),
       },
     },
     server: {
+      // HMR is disabled in AI Studio via DISABLE_HMR env var.
+      // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},

@@ -28,6 +28,8 @@ interface DashboardViewProps {
   syncStatus?: 'synced' | 'syncing' | 'idle';
   lastSyncedText?: string;
   auditLogs?: TransactionAuditEntry[];
+  categories?: import('../types/inventory').MasterCategory[];
+  locations?: import('../types/inventory').MasterLocation[];
   onConsumeItem: (item: InventoryItem) => void;
   onAddToCart: (item: InventoryItem) => void;
   onBulkAddCritical: () => void;
@@ -46,6 +48,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   syncStatus = 'synced',
   lastSyncedText = 'Synced just now',
   auditLogs = [],
+  categories = [],
+  locations = [],
   onConsumeItem,
   onAddToCart,
   onBulkAddCritical,
@@ -408,8 +412,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDark ? 'text-[#94a3b8]' : 'text-[#64748b]'}`}>
                 Total Assets
               </span>
-              <div className="w-6 h-6 rounded-md bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-[#38bdf8] transition-transform group-hover:scale-110">
-                <span className="material-symbols-outlined text-[14px]">inventory_2</span>
+              <div className="w-8 h-8 rounded-lg p-1.5 bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-[#38bdf8] transition-transform group-hover:scale-105">
+                <span className="material-symbols-outlined text-[16px]">inventory_2</span>
               </div>
             </div>
             <div className="mt-2">
@@ -452,8 +456,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDark ? 'text-[#94a3b8]' : 'text-[#64748b]'}`}>
                 Pantry Value
               </span>
-              <div className="w-6 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[#34d399] transition-transform group-hover:scale-110">
-                <span className="material-symbols-outlined text-[14px]">payments</span>
+              <div className="w-8 h-8 rounded-lg p-1.5 bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[#34d399] transition-transform group-hover:scale-105">
+                <span className="material-symbols-outlined text-[16px]">payments</span>
               </div>
             </div>
             <div className="mt-2">
@@ -493,26 +497,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             }`}
           >
             <div className="flex items-start justify-between">
-              <span className="text-[11px] font-semibold text-[#f87171] uppercase tracking-wider">
+              <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDark ? 'text-[#f87171]' : 'text-rose-800'}`}>
                 Waste Risk
               </span>
-              <span className="px-1.5 py-0.5 rounded bg-[#ef4444] text-white text-[9px] font-bold tracking-wide uppercase">
-                Critical
-              </span>
+              <div className={`w-8 h-8 rounded-lg p-1.5 flex items-center justify-center transition-transform group-hover:scale-105 ${
+                isDark ? 'bg-rose-500/20 border border-rose-500/40 text-[#f87171]' : 'bg-rose-100 border border-rose-300 text-rose-800'
+              }`}>
+                <span className="material-symbols-outlined text-[16px]">warning</span>
+              </div>
             </div>
             <div className="mt-2">
-              <div className="text-[22px] font-extrabold text-[#f87171] leading-tight tracking-tight tabular-nums flex items-baseline">
+              <div className={`text-[22px] font-extrabold leading-tight tracking-tight tabular-nums flex items-baseline ${
+                isDark ? 'text-[#f87171]' : 'text-rose-900'
+              }`}>
                 <PriceDisplay amount={wasteRiskValue} currency={currency} />
               </div>
-              <p className="text-[11px] text-[#fca5a5]/80 mt-0.5">
+              <p className={`text-[11px] mt-0.5 font-medium ${isDark ? 'text-[#fca5a5]/80' : 'text-rose-800'}`}>
                 {urgentExpiringItems.length} items expiring &lt;48h
               </p>
             </div>
-            <div className="mt-2.5 pt-2 border-t border-[#7f1d1d]/50 flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-[#fca5a5] flex items-center gap-1">
-                <span className="material-symbols-outlined text-[12px] text-[#f87171]">timer</span> Action Urgent
+            <div className={`mt-2.5 pt-2 border-t flex items-center justify-between ${
+              isDark ? 'border-[#7f1d1d]/50' : 'border-rose-200'
+            }`}>
+              <span className={`text-[10px] font-semibold flex items-center gap-1 ${
+                isDark ? 'text-[#fca5a5]' : 'text-rose-800'
+              }`}>
+                <span className={`material-symbols-outlined text-[12px] ${isDark ? 'text-[#f87171]' : 'text-rose-700'}`}>timer</span> Action Urgent
               </span>
-              <span className="text-[10px] underline text-[#fca5a5] hover:text-white">
+              <span className={`text-[10px] underline font-semibold ${
+                isDark ? 'text-[#fca5a5] hover:text-white' : 'text-rose-800 hover:text-rose-950'
+              }`}>
                 Review ➔
               </span>
             </div>
@@ -537,26 +551,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             }`}
           >
             <div className="flex items-start justify-between">
-              <span className="text-[11px] font-semibold text-[#fbbf24] uppercase tracking-wider">
+              <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDark ? 'text-[#fbbf24]' : 'text-amber-800'}`}>
                 Restock Ready
               </span>
-              <div className="w-6 h-6 rounded-md bg-[#3b2308] border border-[#b45309]/50 flex items-center justify-center text-[#fbbf24] transition-transform group-hover:scale-110">
-                <span className="material-symbols-outlined text-[14px]">shopping_cart_checkout</span>
+              <div className={`w-8 h-8 rounded-lg p-1.5 flex items-center justify-center transition-transform group-hover:scale-105 ${
+                isDark ? 'bg-[#3b2308] border border-[#b45309]/50 text-[#fbbf24]' : 'bg-amber-100 border border-amber-300 text-amber-800'
+              }`}>
+                <span className="material-symbols-outlined text-[16px]">shopping_cart_checkout</span>
               </div>
             </div>
             <div className="mt-2">
-              <div className="text-[22px] font-extrabold text-[#fbbf24] leading-tight tracking-tight tabular-nums">
+              <div className={`text-[22px] font-extrabold leading-tight tracking-tight tabular-nums ${
+                isDark ? 'text-[#fbbf24]' : 'text-amber-900'
+              }`}>
                 {restockReadyCount} to Buy
               </div>
-              <p className="text-[11px] text-[#fde68a]/80 mt-0.5">
+              <p className={`text-[11px] mt-0.5 font-medium ${isDark ? 'text-[#fde68a]/80' : 'text-amber-800'}`}>
                 {criticalLowItems.length} below critical floor
               </p>
             </div>
-            <div className="mt-2.5 pt-2 border-t border-[#b45309]/40 flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-[#fbbf24] flex items-center gap-1">
+            <div className={`mt-2.5 pt-2 border-t flex items-center justify-between ${
+              isDark ? 'border-[#b45309]/40' : 'border-amber-200'
+            }`}>
+              <span className={`text-[10px] font-semibold flex items-center gap-1 ${
+                isDark ? 'text-[#fbbf24]' : 'text-amber-800'
+              }`}>
                 <span className="material-symbols-outlined text-[12px]">warning</span> Replenish
               </span>
-              <span className="text-[10px] underline text-[#fbbf24] hover:text-white">
+              <span className={`text-[10px] underline font-semibold ${
+                isDark ? 'text-[#fbbf24] hover:text-white' : 'text-amber-800 hover:text-amber-950'
+              }`}>
                 Queue ➔
               </span>
             </div>
@@ -1101,7 +1125,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <span className="material-symbols-outlined text-[16px] text-emerald-400">
                         done
                       </span>
-                      <span>Consume</span>
+                      <span className="hidden sm:inline">Consume</span>
                     </button>
 
                     {/* Add to Restock Cart */}
@@ -1119,7 +1143,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <span className="material-symbols-outlined text-[16px]">
                         add_shopping_cart
                       </span>
-                      <span>+ Cart</span>
+                      <span className="hidden sm:inline">+ Cart</span>
                     </button>
                   </div>
                 </div>
@@ -1282,13 +1306,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         }`}
                       >
                         <span className="material-symbols-outlined text-[22px]">
-                          {item.categoryId === 'cat_dairy'
-                            ? 'local_drink'
-                            : item.categoryId === 'cat_medical'
-                            ? 'medication'
-                            : item.categoryId === 'cat_beverages'
-                            ? 'coffee'
-                            : 'inventory_2'}
+                          {categories.find((c) => c.id === item.categoryId)?.icon ||
+                            (item.categoryId === 'cat_dairy'
+                              ? 'local_drink'
+                              : item.categoryId === 'cat_medical'
+                              ? 'medication'
+                              : item.categoryId === 'cat_beverages'
+                              ? 'coffee'
+                              : item.categoryId === 'cat_produce'
+                              ? 'nutrition'
+                              : item.categoryId === 'cat_household'
+                              ? 'cleaning_services'
+                              : 'inventory_2')}
                         </span>
                       </div>
                     )}

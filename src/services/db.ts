@@ -1153,7 +1153,7 @@ export class HomeShelfDatabase {
 
   async resetToDemoDefaults(): Promise<void> {
     const db = await this.initDB();
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const tx = db.transaction(
         ['items', 'categories', 'locations', 'shelves', 'units', 'priorities', 'audit_log'],
         'readwrite'
@@ -1166,10 +1166,64 @@ export class HomeShelfDatabase {
       tx.objectStore('priorities').clear();
       tx.objectStore('audit_log').clear();
 
+      tx.onerror = () => reject(tx.error);
+
       tx.oncomplete = async () => {
-        await this.seedDefaults(db);
-        resolve();
+        try {
+          await this.seedDefaults(db);
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
       };
+    });
+  }
+
+  /**
+   * Clean Mode / Fresh Start
+   * @param wipeMasterData
+   * - false ("Wipe Items Only"): Clears items and audit_log; re-asserts default master taxonomy (categories, locations, shelves, units, priorities) for clean data entry.
+   * - true ("Total Wipe"): Clears all 7 object stores to 0 records.
+   */
+  async cleanStorage(wipeMasterData: boolean = false): Promise<void> {
+    const db = await this.initDB();
+    return new Promise((resolve, reject) => {
+      const stores = [
+        'items',
+        'categories',
+        'locations',
+        'shelves',
+        'units',
+        'priorities',
+        'audit_log',
+      ];
+      const tx = db.transaction(stores, 'readwrite');
+
+      tx.objectStore('items').clear();
+      tx.objectStore('audit_log').clear();
+
+      if (wipeMasterData) {
+        tx.objectStore('categories').clear();
+        tx.objectStore('locations').clear();
+        tx.objectStore('shelves').clear();
+        tx.objectStore('units').clear();
+        tx.objectStore('priorities').clear();
+      } else {
+        const catStore = tx.objectStore('categories');
+        const locStore = tx.objectStore('locations');
+        const shelfStore = tx.objectStore('shelves');
+        const unitStore = tx.objectStore('units');
+        const prioStore = tx.objectStore('priorities');
+
+        DEFAULT_CATEGORIES.forEach((c) => catStore.put(c));
+        DEFAULT_LOCATIONS.forEach((l) => locStore.put(l));
+        DEFAULT_SHELVES.forEach((s) => shelfStore.put(s));
+        DEFAULT_UNITS.forEach((u) => unitStore.put(u));
+        DEFAULT_PRIORITIES.forEach((p) => prioStore.put(p));
+      }
+
+      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => resolve();
     });
   }
 

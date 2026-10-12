@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-40 backdrop-blur-xl border-b transition-colors duration-200 ${
+      className={`fixed top-0 inset-x-0 z-40 backdrop-blur-xl border-b transition-colors duration-200 sticky-elevate ${
         isDark
           ? 'bg-[#0b1326]/90 border-[#243049] text-[#f8fafc]'
           : 'bg-[#faf8ff]/90 border-[#e2e8f0] text-[#131b2e]'
@@ -58,7 +58,9 @@ export const Header: React.FC<HeaderProps> = ({
                 className="h-8 w-8 object-contain flex-shrink-0 rounded-lg shadow-sm transition-transform group-hover:scale-105"
                 src="/icon.svg"
               />
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#0b1326]" />
+              <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ${
+                isDark ? 'ring-[#0b1326]' : 'ring-white'
+              }`} />
             </div>
 
             <div className="flex flex-col flex-shrink-0">
@@ -90,7 +92,9 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Center Slot: Live Sync Health Telemetry (Desktop) */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-mono border-slate-700/40 bg-slate-800/20 text-slate-400">
+        <div className={`hidden lg:flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-mono transition-colors ${
+          isDark ? 'border-slate-700/40 bg-slate-800/20 text-slate-400' : 'border-slate-200 bg-slate-100/80 text-slate-600'
+        }`}>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>Local Vault Online • {lastSyncedText}</span>
         </div>

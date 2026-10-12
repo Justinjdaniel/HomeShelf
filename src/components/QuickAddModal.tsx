@@ -15,6 +15,7 @@ import {
 import { dbService } from '../services/db';
 import { compressAndResizeImage, OptimizedImageResult } from '../utils/imageOptimizer';
 import { triggerHaptic } from '../utils/nativeAlerts';
+import { IconPickerModal } from './common/IconPickerModal';
 
 interface QuickAddModalProps {
   categories: MasterCategory[];
@@ -214,6 +215,14 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
   const [optimizedImage, setOptimizedImage] = useState<OptimizedImageResult | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
 
+  // Icon picker state
+  const [iconPickerTarget, setIconPickerTarget] = useState<{
+    type: 'categories' | 'locations';
+    id: string;
+    currentIcon: string;
+    title: string;
+  } | null>(null);
+
   // Filter shelves for selected location
   const availableShelves = localShelves.filter((s) => s.locationId === locationId);
 
@@ -351,6 +360,36 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       if (onRefreshMasterData) onRefreshMasterData();
     } catch {
       if (onShowToast) onShowToast('Failed to save option changes');
+    }
+  };
+
+  const handleUpdateOptionIcon = async (newIcon: string) => {
+    if (!iconPickerTarget) return;
+    const { type, id } = iconPickerTarget;
+
+    try {
+      if (type === 'categories') {
+        const cat = localCategories.find((c) => c.id === id);
+        if (cat) {
+          const updated = { ...cat, icon: newIcon };
+          await dbService.saveCategory(updated);
+          setLocalCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
+          if (onShowToast) onShowToast(`Icon updated for "${cat.name}"`);
+        }
+      } else if (type === 'locations') {
+        const loc = localLocations.find((l) => l.id === id);
+        if (loc) {
+          const updated = { ...loc, icon: newIcon };
+          await dbService.saveLocation(updated);
+          setLocalLocations((prev) => prev.map((l) => (l.id === id ? updated : l)));
+          if (onShowToast) onShowToast(`Icon updated for "${loc.name}"`);
+        }
+      }
+      if (onRefreshMasterData) onRefreshMasterData();
+    } catch {
+      if (onShowToast) onShowToast('Failed to update option icon');
+    } finally {
+      setIconPickerTarget(null);
     }
   };
 
@@ -548,7 +587,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
               </span>
             )}
           </div>
-          <p className="text-[11px] text-slate-400">
+          <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             Auto-populates common asset fields with typical stock, price, category, and expiration horizons.
           </p>
 
@@ -614,7 +653,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
               </button>
             </div>
 
-            <p className="text-[11px] text-slate-400">
+            <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               Edit labels or remove obsolete options. Changes persist directly into your IndexedDB master vault.
             </p>
 
@@ -673,7 +712,28 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                       isDark ? 'bg-slate-800/40 border-slate-700/60' : 'bg-white border-slate-200'
                     }`}
                   >
-                    <span className="font-semibold truncate">{optLabel}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {(managingSection === 'categories' || managingSection === 'locations') && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIconPickerTarget({
+                              type: managingSection as 'categories' | 'locations',
+                              id: optId,
+                              currentIcon: opt.icon || (managingSection === 'categories' ? 'category' : 'room'),
+                              title: `Change Icon for "${optLabel}"`,
+                            })
+                          }
+                          title="Click to change icon"
+                          className="w-6 h-6 rounded bg-sky-500/15 hover:bg-sky-500/30 text-sky-400 border border-sky-500/30 flex items-center justify-center flex-shrink-0 active:scale-95"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {opt.icon || (managingSection === 'categories' ? 'category' : 'room')}
+                          </span>
+                        </button>
+                      )}
+                      <span className="font-semibold truncate">{optLabel}</span>
+                    </div>
 
                     {isConfirmingDelete ? (
                       <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -789,9 +849,13 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
           </div>
 
           {/* Image Capture & In-Browser Optimizer */}
-          <div className="flex flex-col gap-1.5 p-3 rounded-xl border border-slate-700/50 bg-slate-800/30">
+          <div className={`flex flex-col gap-1.5 p-3 rounded-xl border transition-colors ${
+            isDark ? 'border-slate-700/50 bg-slate-800/30' : 'border-slate-200 bg-slate-50'
+          }`}>
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold text-sky-400 uppercase tracking-wider flex items-center gap-1">
+              <label className={`text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1 ${
+                isDark ? 'text-sky-400' : 'text-sky-700'
+              }`}>
                 <span className="material-symbols-outlined text-[15px]">photo_camera</span>
                 <span>Optimized Item Photo</span>
               </label>
@@ -820,7 +884,9 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                   </button>
                 </div>
               ) : (
-                <div className="w-14 h-14 rounded-lg border border-dashed border-slate-700 flex items-center justify-center text-slate-500 flex-shrink-0">
+                <div className={`w-14 h-14 rounded-lg border border-dashed flex items-center justify-center flex-shrink-0 ${
+                  isDark ? 'border-slate-700 text-slate-500' : 'border-slate-300 text-slate-400 bg-white'
+                }`}>
                   <span className="material-symbols-outlined text-[20px]">image</span>
                 </div>
               )}
@@ -828,7 +894,11 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
               <div className="flex flex-col gap-1 flex-1">
                 <label
                   htmlFor="quick-add-photo-input"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600/30 hover:bg-sky-600/40 text-sky-300 border border-sky-500/40 text-xs font-semibold w-fit cursor-pointer transition-colors active:scale-95"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold w-fit cursor-pointer transition-colors active:scale-95 ${
+                    isDark
+                      ? 'bg-sky-600/30 hover:bg-sky-600/40 text-sky-300 border-sky-500/40'
+                      : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-300 shadow-xs'
+                  }`}
                 >
                   <span className="material-symbols-outlined text-[16px]">upload</span>
                   <span>{isCompressing ? 'Compressing WebP...' : 'Attach / Snap Photo'}</span>
@@ -841,30 +911,20 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
                   onChange={handleImageFileChange}
                   className="hidden"
                 />
-                <span className="text-[10px] text-slate-400">
+                <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                   Auto-downscaled &amp; WebP compressed in-browser to preserve local DB storage.
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Category & Unit with Edit / Manage trigger */}
+          {/* Category & Unit (Clean Aligned Headers) */}
           <div className="grid grid-cols-2 gap-2.5">
             {/* Category */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Category
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setManagingSection('categories')}
-                  className="text-[10px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-0.5 active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[12px]">edit</span>
-                  <span>Manage</span>
-                </button>
-              </div>
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Category
+              </label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
@@ -884,19 +944,9 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
             {/* Measurement Unit */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Measurement Unit
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setManagingSection('units')}
-                  className="text-[10px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-0.5 active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[12px]">edit</span>
-                  <span>Manage</span>
-                </button>
-              </div>
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Measurement Unit
+              </label>
               <select
                 value={unitId}
                 onChange={(e) => setUnitId(e.target.value)}
@@ -915,23 +965,13 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
             </div>
           </div>
 
-          {/* Location & Shelf Hierarchy with Edit / Manage triggers */}
+          {/* Location & Shelf Hierarchy (Clean Aligned Headers) */}
           <div className="grid grid-cols-2 gap-2.5">
             {/* Location */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Room / Location
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setManagingSection('locations')}
-                  className="text-[10px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-0.5 active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[12px]">edit</span>
-                  <span>Manage</span>
-                </button>
-              </div>
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Room / Location
+              </label>
               <select
                 value={locationId}
                 onChange={(e) => {
@@ -955,19 +995,9 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
             {/* Shelf Tier */}
             <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Shelf Tier
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setManagingSection('shelves')}
-                  className="text-[10px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-0.5 active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[12px]">edit</span>
-                  <span>Manage</span>
-                </button>
-              </div>
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Shelf Tier
+              </label>
               <select
                 value={shelfId}
                 onChange={(e) => setShelfId(e.target.value)}
@@ -1101,6 +1131,16 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
             </button>
           </div>
         </form>
+
+        {/* Master Icon Picker Overlay */}
+        <IconPickerModal
+          isOpen={iconPickerTarget !== null}
+          currentIcon={iconPickerTarget?.currentIcon}
+          title={iconPickerTarget?.title}
+          onSelectIcon={handleUpdateOptionIcon}
+          onClose={() => setIconPickerTarget(null)}
+          isDark={isDark}
+        />
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import { dbService } from '../services/db';
 import { SUPPORTED_CURRENCIES } from '../utils/currency';
 import { DirhamSign } from './DirhamSign';
 import { getStorageQuotaEstimate } from '../utils/imageOptimizer';
+import { IconPickerModal } from './common/IconPickerModal';
 
 interface SettingsModalProps {
   categories: MasterCategory[];
@@ -49,6 +50,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [activeTab, setActiveTab] = useState<SettingsTab>('currency');
   const [activeMasterType, setActiveMasterType] = useState<MasterType>('categories');
 
+  // Icon Picker state
+  const [iconPickerTarget, setIconPickerTarget] = useState<{
+    type: 'categories' | 'locations';
+    id: string;
+    currentIcon: string;
+    title: string;
+  } | null>(null);
+
   // Manual export/import state (Data Sovereignty)
   const [pendingImport, setPendingImport] = useState<{
     rawContent: string;
@@ -60,6 +69,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isProcessingImport, setIsProcessingImport] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+
+  // Clean Mode (Fresh Start) state
+  const [showCleanModal, setShowCleanModal] = useState(false);
+  const [cleanWipeMaster, setCleanWipeMaster] = useState(false);
+  const [isCleaningStorage, setIsCleaningStorage] = useState(false);
 
   // Input states for adding new master entry
   const [newEntryName, setNewEntryName] = useState('');
@@ -149,6 +163,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
     onShowToast(`Removed "${name}" from master data`);
     onRefreshMasterData();
+  };
+
+  const handleUpdateIcon = async (newIcon: string) => {
+    if (!iconPickerTarget) return;
+    const { type, id } = iconPickerTarget;
+
+    try {
+      if (type === 'categories') {
+        const cat = categories.find((c) => c.id === id);
+        if (cat) {
+          await dbService.saveCategory({ ...cat, icon: newIcon });
+          onShowToast(`Updated icon for "${cat.name}"`);
+        }
+      } else if (type === 'locations') {
+        const loc = locations.find((l) => l.id === id);
+        if (loc) {
+          await dbService.saveLocation({ ...loc, icon: newIcon });
+          onShowToast(`Updated icon for "${loc.name}"`);
+        }
+      }
+      onRefreshMasterData();
+    } catch {
+      onShowToast('Failed to update icon');
+    } finally {
+      setIconPickerTarget(null);
+    }
   };
 
   const handleExportBackup = async () => {
@@ -244,6 +284,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onRefreshMasterData();
     setConfirmReset(false);
     onShowToast('Database reset to factory 142 items');
+  };
+
+  const handleExecuteClean = async () => {
+    setIsCleaningStorage(true);
+    try {
+      await dbService.cleanStorage(cleanWipeMaster);
+      onRefreshMasterData();
+      setShowCleanModal(false);
+      onShowToast(
+        cleanWipeMaster
+          ? 'Storage wiped completely (fresh clean slate)'
+          : 'All inventory items cleared. Categories ready for new entries.'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Clean storage failed';
+      onShowToast(`Error: ${msg}`);
+    } finally {
+      setIsCleaningStorage(false);
+    }
   };
 
   return (
@@ -606,7 +665,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </button>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                     How would you like to apply this backup to your local inventory database?
                   </p>
 
@@ -654,6 +713,152 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               )}
             </div>
 
+            {/* Clean Mode (Fresh Start) Card */}
+            <div
+              className={`p-4 rounded-xl border flex flex-col gap-2 ${
+                isDark ? 'bg-amber-950/20 border-amber-900/40 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-500 text-[20px]">cleaning_services</span>
+                <span className="text-xs font-bold text-amber-500 uppercase">Clean Mode • Fresh Start</span>
+              </div>
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-amber-950/80 font-medium'}`}>
+                Clear existing items and start with a clean ledger for your own household inventory.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowCleanModal(true)}
+                className="py-2 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 w-fit active:scale-95 transition-all mt-1"
+              >
+                <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+                <span>Clean Storage Data</span>
+              </button>
+            </div>
+
+            {/* Clean Mode Confirmation Modal */}
+            {showCleanModal && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="clean-modal-title"
+                className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+              >
+                <div
+                  className={`w-full max-w-md rounded-2xl border p-5 shadow-2xl flex flex-col gap-4 ${
+                    isDark ? 'bg-[#0f172a] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-700/40">
+                    <div className="flex items-center gap-2 text-amber-500">
+                      <span className="material-symbols-outlined text-[22px]">cleaning_services</span>
+                      <h3 id="clean-modal-title" className="text-sm font-bold">
+                        Clean Storage • Choose Scope
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCleanModal(false)}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                  </div>
+
+                  <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Select how you would like to wipe your inventory database:
+                  </p>
+
+                  <div className="flex flex-col gap-2.5">
+                    {/* Option 1: Items Only */}
+                    <label
+                      onClick={() => setCleanWipeMaster(false)}
+                      className={`p-3 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                        !cleanWipeMaster
+                          ? 'border-sky-500 bg-sky-500/10 ring-1 ring-sky-500/30'
+                          : isDark
+                          ? 'border-slate-800 bg-slate-900/50 hover:bg-slate-800'
+                          : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="cleanScope"
+                        checked={!cleanWipeMaster}
+                        onChange={() => setCleanWipeMaster(false)}
+                        className="mt-0.5 accent-sky-500"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-sky-400">
+                          Wipe Items Only (Recommended)
+                        </span>
+                        <span className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                          Empties all inventory assets and audit logs to 0. Preserves standard categories, locations, and units so you can add real groceries immediately.
+                        </span>
+                      </div>
+                    </label>
+
+                    {/* Option 2: Total Wipe */}
+                    <label
+                      onClick={() => setCleanWipeMaster(true)}
+                      className={`p-3 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                        cleanWipeMaster
+                          ? 'border-rose-500 bg-rose-500/10 ring-1 ring-rose-500/30'
+                          : isDark
+                          ? 'border-slate-800 bg-slate-900/50 hover:bg-slate-800'
+                          : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="cleanScope"
+                        checked={cleanWipeMaster}
+                        onChange={() => setCleanWipeMaster(true)}
+                        className="mt-0.5 accent-rose-500"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-rose-400">
+                          Total Clean Slate (Wipe All Stores)
+                        </span>
+                        <span className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                          Completely wipes all 7 stores (items, custom categories, rooms, shelves) to zero records.
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-700/40">
+                    <button
+                      type="button"
+                      onClick={() => setShowCleanModal(false)}
+                      disabled={isCleaningStorage}
+                      className="px-3 py-1.5 rounded-lg border border-slate-600 text-xs font-semibold hover:bg-slate-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExecuteClean}
+                      disabled={isCleaningStorage}
+                      className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-md"
+                    >
+                      {isCleaningStorage ? (
+                        <>
+                          <span className="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                          <span>Cleaning Storage...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[16px]">check</span>
+                          <span>Execute Clean</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Emergency Reset Section with Inline Confirmation */}
             <div
               className={`p-4 rounded-xl border flex flex-col gap-2 ${
@@ -662,9 +867,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-red-400 text-[20px]">warning</span>
-                <span className="text-xs font-bold text-red-400 uppercase">Emergency Data Reset</span>
+                <span className="text-xs font-bold text-red-400 uppercase">Emergency Factory Reset</span>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-red-950/80 font-medium'}`}>
                 Re-seeds the entire database with the clean default 142 items and fresh pantry shelves.
               </p>
 
@@ -775,18 +980,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       isDark ? 'bg-[#1a243b] border-[#243049]' : 'bg-slate-50 border-slate-200'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px] text-sky-400">{c.icon}</span>
-                      <span className="font-semibold">{c.name}</span>
-                    </div>
-                    {c.isCustom && (
+                    <div className="flex items-center gap-2 min-w-0">
                       <button
-                        onClick={() => handleDeleteMasterEntry('categories', c.id, c.name)}
-                        className="text-red-400 hover:text-red-300 text-[11px]"
+                        type="button"
+                        onClick={() =>
+                          setIconPickerTarget({
+                            type: 'categories',
+                            id: c.id,
+                            currentIcon: c.icon,
+                            title: `Change Icon for "${c.name}"`,
+                          })
+                        }
+                        title="Click to change category icon"
+                        className="w-7 h-7 rounded-md bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/30 flex items-center justify-center text-sky-400 active:scale-95 transition-all"
                       >
-                        Delete
+                        <span className="material-symbols-outlined text-[16px]">{c.icon || 'category'}</span>
                       </button>
-                    )}
+                      <span className="font-semibold truncate">{c.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setIconPickerTarget({
+                            type: 'categories',
+                            id: c.id,
+                            currentIcon: c.icon,
+                            title: `Change Icon for "${c.name}"`,
+                          })
+                        }
+                        className="text-sky-400 hover:text-sky-300 text-[11px] font-semibold"
+                      >
+                        Change Icon
+                      </button>
+                      {c.isCustom && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMasterEntry('categories', c.id, c.name)}
+                          className="text-red-400 hover:text-red-300 text-[11px]"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
 
@@ -798,15 +1034,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       isDark ? 'bg-[#1a243b] border-[#243049]' : 'bg-slate-50 border-slate-200'
                     }`}
                   >
-                    <span className="font-semibold">{l.name}</span>
-                    {l.isCustom && (
+                    <div className="flex items-center gap-2 min-w-0">
                       <button
-                        onClick={() => handleDeleteMasterEntry('locations', l.id, l.name)}
-                        className="text-red-400 hover:text-red-300 text-[11px]"
+                        type="button"
+                        onClick={() =>
+                          setIconPickerTarget({
+                            type: 'locations',
+                            id: l.id,
+                            currentIcon: l.icon || 'room',
+                            title: `Change Icon for "${l.name}"`,
+                          })
+                        }
+                        title="Click to change location icon"
+                        className="w-7 h-7 rounded-md bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/30 flex items-center justify-center text-emerald-400 active:scale-95 transition-all"
                       >
-                        Delete
+                        <span className="material-symbols-outlined text-[16px]">{l.icon || 'room'}</span>
                       </button>
-                    )}
+                      <span className="font-semibold truncate">{l.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setIconPickerTarget({
+                            type: 'locations',
+                            id: l.id,
+                            currentIcon: l.icon || 'room',
+                            title: `Change Icon for "${l.name}"`,
+                          })
+                        }
+                        className="text-sky-400 hover:text-sky-300 text-[11px] font-semibold"
+                      >
+                        Change Icon
+                      </button>
+                      {l.isCustom && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMasterEntry('locations', l.id, l.name)}
+                          className="text-red-400 hover:text-red-300 text-[11px]"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
 
@@ -909,7 +1179,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Icon Picker Overlay */}
+        <IconPickerModal
+          isOpen={iconPickerTarget !== null}
+          currentIcon={iconPickerTarget?.currentIcon}
+          title={iconPickerTarget?.title}
+          onSelectIcon={handleUpdateIcon}
+          onClose={() => setIconPickerTarget(null)}
+          isDark={isDark}
+        />
       </div>
     </div>
   );
 };
+

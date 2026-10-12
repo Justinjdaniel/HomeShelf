@@ -57,8 +57,19 @@ export default function App() {
   // Diagnostics warmup screen
   const [showDiagnostics, setShowDiagnostics] = useState<boolean>(false);
 
-  // Active Navigation Tab
+  // Active Navigation Tab with View Transitions API
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
+
+  const handleTabChange = useCallback((newTab: NavTab) => {
+    if (newTab === currentTab) return;
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
+        setCurrentTab(newTab);
+      });
+    } else {
+      setCurrentTab(newTab);
+    }
+  }, [currentTab]);
 
   // Modals state
   const [showQuickAdd, setShowQuickAdd] = useState<boolean>(false);
@@ -418,9 +429,9 @@ export default function App() {
 
   const handleKpiDrillDown = (filterType: 'all' | 'valuation' | 'waste' | 'restock') => {
     if (filterType === 'restock') {
-      setCurrentTab('shopping');
+      handleTabChange('shopping');
     } else {
-      setCurrentTab('shelves');
+      handleTabChange('shelves');
     }
   };
 
@@ -479,7 +490,7 @@ export default function App() {
         {/* Universal Top Application Header (Without hamburger, diagnostics on right) */}
         <Header
           currentTab={currentTab}
-          onTabChange={(tab) => setCurrentTab(tab)}
+          onTabChange={handleTabChange}
           shoppingCount={activeShoppingCount}
           isDark={isDark}
           syncStatus={syncStatus}
@@ -506,7 +517,7 @@ export default function App() {
             onClose={() => setShowDiagnostics(false)}
             onDirectScan={() => {
               setShowDiagnostics(false);
-              setCurrentTab('scanner');
+              handleTabChange('scanner');
             }}
             isDark={isDark}
           />
@@ -521,10 +532,12 @@ export default function App() {
               syncStatus={syncStatus}
               lastSyncedText={lastSyncedText}
               auditLogs={auditLogs}
+              categories={categories}
+              locations={locations}
               onConsumeItem={handleConsumeItem}
               onAddToCart={handleAddToCart}
               onBulkAddCritical={handleBulkAddCritical}
-              onNavigateToTab={(tab) => setCurrentTab(tab)}
+              onNavigateToTab={handleTabChange}
               onOpenQuickAdd={() => setShowQuickAdd(true)}
               onKpiDrillDown={handleKpiDrillDown}
               onSelectItem={(item) => setSelectedItem(item)}
@@ -570,7 +583,7 @@ export default function App() {
         {/* Primary Bottom Navigation Dock */}
         <BottomNavDock
           currentTab={currentTab}
-          onTabChange={(tab) => setCurrentTab(tab)}
+          onTabChange={handleTabChange}
           shoppingCount={activeShoppingCount}
           isDark={isDark}
           onOpenQuickAdd={() => setShowQuickAdd(true)}
