@@ -1,0 +1,10 @@
+{
+  "name": "HomeShelf",
+  "description": "Intelligent offline-first home inventory, shelf ledger, and zero-waste pantry manager with real-time barcode scanning and local database persistence.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

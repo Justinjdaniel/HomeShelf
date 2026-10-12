@@ -1,0 +1,94 @@
+name: Native Android APK Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify Android build prerequisites
+        working-directory: ./android
+        run: |
+          missing=0
+          for path in ./gradlew ./gradle/wrapper/gradle-wrapper.jar ./app/src/main/AndroidManifest.xml; do
+            if [[ ! -f "$path" ]]; then
+              echo "::error file=android/$path::Required Android build file is missing."
+              missing=1
+            fi
+          done
+          if ! find ./app/src/main -type f \( -name 'MainActivity.kt' -o -name 'MainActivity.java' \) -print -quit | grep -q .; then
+            echo "::error::The Android launcher activity source is missing from app/src/main."
+            missing=1
+          fi
+          if [[ "$missing" -ne 0 ]]; then
+            exit 1
+          fi
+          chmod +x ./gradlew
+
+      - name: Build release APK
+        working-directory: ./android
+        run: ./gradlew --no-daemon assembleRelease --stacktrace
+
+      - name: Prepare APK
+        run: |
+          install -D android/app/build/outputs/apk/release/app-release.apk homeshelf-android.apk
+          test -s homeshelf-android.apk
+
+      - name: Upload APK as GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: homeshelf-android-apk
+          path: homeshelf-android.apk
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish Android APK
+    needs: build-android-apk
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: homeshelf-android-apk
+
+      - name: Publish APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: HomeShelf Android ${{ github.ref_name }}
+          body: |
+            APK built from this repository's Android project.
+
+            This APK uses the debug signing configuration in the current Gradle build settings and is intended for testing/sideloading, not Play Store distribution.
+          files: homeshelf-android.apk
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -19,7 +19,31 @@ This document prescribes operational directives for autonomous software agents, 
 
 ---
 
-## 3. Subsystem Verification & CI/CD Checklist
+## 3. Modern Web Guidance CLI (Chrome Team) for Agents & Sub-agents
+
+The project integrates the official `modern-web-guidance` CLI developed by the Chrome team to enforce web standards, optimal layout, and agent interoperability.
+
+### Commands for Agents & Sub-agents:
+```bash
+# List all 30+ official Modern Web Guidance use cases
+npx modern-web-guidance list
+
+# Search guidance by topic (e.g. typography, forms, alignment, dark-mode)
+npx modern-web-guidance search <query>
+
+# Retrieve detailed implementation blueprints by ID
+npx modern-web-guidance retrieve precise-text-alignment
+npx modern-web-guidance retrieve agentic-forms,agentic-javascript-tools
+```
+
+### Core Web Standards Enforced:
+- **`precise-text-alignment`**: `text-box: trim-both cap alphabetic` for pixel-perfect typographic baseline alignment with currency glyphs (e.g. UAE Dirham) and icons.
+- **`webmcp`**: Web Model Context Protocol attributes and client-side imperative tool interfaces for AI agents.
+- **`persistent-toast-notifications`**: Non-intrusive, stackable HUD messaging and system alert communication.
+
+---
+
+## 4. Subsystem Verification & CI/CD Checklist
 
 Before committing changes to `main`:
 
@@ -33,10 +57,11 @@ Before committing changes to `main`:
 
 ---
 
-## 4. Troubleshooting & Self-Healing
+## 5. Troubleshooting & Self-Healing
 
 | Symptom | Root Cause | Remediation Protocol |
 | :--- | :--- | :--- |
 | **IndexedDB blocked** | Multiple browser tabs holding older schema version | Call `indexedDB.deleteDatabase()` or trigger `dbService.resetToDemoDefaults()` |
 | **Camera feed black** | Permission denied or unsupported facingMode | Fallback automatically to simulated GTIN preset buttons |
 | **Layout overflow** | Text wrapping on small screens | Enforce single-line controls with `truncate` or `whitespace-nowrap` |
+| **Currency misaligned** | Internal font leading offset | Enforce `inline-flex items-baseline` and `trim-text-box` (`text-box: trim-both cap alphabetic`) |
