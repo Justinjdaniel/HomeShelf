@@ -1,9 +1,9 @@
 # 📦 HomeShelf — Intelligent Home Inventory & Shelf Ledger
 
-[![CI Workflow](https://github.com/your-username/homeshelf/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/homeshelf/actions/workflows/ci.yml)
-[![Deploy to GitHub Pages](https://github.com/your-username/homeshelf/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-username/homeshelf/actions/workflows/deploy.yml)
+[![CI Workflow](https://github.com/Justinjdaniel/HomeShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/Justinjdaniel/HomeShelf/actions/workflows/ci.yml)
+[![Deploy to GitHub Pages](https://github.com/Justinjdaniel/HomeShelf/actions/workflows/deploy-web.yml/badge.svg)](https://github.com/Justinjdaniel/HomeShelf/actions/workflows/deploy-web.yml)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-38bdf8?logo=pwa&logoColor=white)](https://vite-pwa-org.netlify.app/)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Built with React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Package Manager](https://img.shields.io/badge/pnpm-12-orange?logo=pnpm&logoColor=white)](https://pnpm.io/)
@@ -70,8 +70,8 @@ The average household discards hundreds of dollars in expired food, duplicate pa
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/your-username/homeshelf.git
-cd homeshelf
+git clone https://github.com/Justinjdaniel/HomeShelf.git
+cd HomeShelf
 pnpm install --frozen-lockfile
 ```
 
@@ -95,8 +95,9 @@ pnpm test
 
 ```bash
 pnpm lint
-pnpm format:check
 ```
+
+`pnpm lint` runs the TypeScript compiler without emitting files. A formatter is not currently configured.
 
 ### Production Build
 
@@ -120,21 +121,21 @@ HomeShelf includes ready-to-use GitHub Actions workflows for continuous integrat
 
 1. **Automated CI (`.github/workflows/ci.yml`)**:
    Runs on every pull request and push to `main`:
-   - Enforces formatting check (`pnpm format:check`)
    - Verifies TypeScript types (`pnpm lint`)
    - Runs unit test suites (`pnpm test`)
    - Verifies static build (`pnpm build`)
 
-2. **Automated Deployment (`.github/workflows/deploy.yml`)**:
-   Runs on push to `main` and publishes the static `dist/` directory to your `gh-pages` branch.
+2. **Automated Deployment (`.github/workflows/deploy-web.yml`)**:
+   Runs on push to `main` or when manually started, builds the site, and deploys the static `dist/` directory using GitHub Pages Actions.
 
 ### Enabling GitHub Pages in your repository:
 1. Navigate to your repository's **Settings** > **Pages**.
-2. Under **Build and deployment**, set the Source to **Deploy from a branch**.
-3. Select `gh-pages` branch and `/ (root)` folder.
-4. Your PWA will be live at `https://<username>.github.io/<repository-name>/`!
+2. Under **Build and deployment**, set the Source to **GitHub Actions**.
+3. Your PWA will be live at `https://<username>.github.io/<repository-name>/`!
 
-> **Note on Base Path**: The build configuration dynamically adjusts the base path for GitHub Pages and relative asset resolution, ensuring all PWA manifests, icons, and service workers load correctly on any subdirectory.
+> **Note on Base Path**: The Vite configuration uses relative asset paths for GitHub Pages, so the PWA manifest, icons, and service worker resolve from the deployed project subdirectory.
+
+The Android release workflow is documented separately in [BUILD_ANDROID.md](./BUILD_ANDROID.md). The Android project is currently incomplete, so the APK workflow stops until its Gradle wrapper and launcher activity are present and the app's manifest resources can build.
 
 ---
 
@@ -149,4 +150,4 @@ HomeShelf operates under a strict **Zero-Telemetry, Local-First** policy:
 
 ## 📄 License
 
-Licensed under the [Apache License, Version 2.0](LICENSE).
+Licensed under the [MIT](LICENSE).

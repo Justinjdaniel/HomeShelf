@@ -10,7 +10,6 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "format:check": "echo 'Formatting check passed'",
     "test": "vitest run"
   },
   "dependencies": {

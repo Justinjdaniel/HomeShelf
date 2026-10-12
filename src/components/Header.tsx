@@ -101,21 +101,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Slot: Clean icon buttons with proper spacing & hover animations */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Diagnostics Console Button (Moved cleanly to right header) */}
-          <button
-            aria-label="Open Diagnostics System Console"
-            onClick={onOpenDiagnostics}
-            title="Open Diagnostics Console"
-            className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-95 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-              isDark
-                ? 'text-[#94a3b8] hover:text-[#38bdf8] hover:bg-[#1a243b]'
-                : 'text-[#64748b] hover:text-[#0284c7] hover:bg-[#eef0ff]'
-            }`}
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[20px]">monitor_heart</span>
-          </button>
-
           {/* Search Inventory Button */}
           <button
             aria-label="Search Inventory Catalog"
