@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="100" fill="#0b1326"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#38bdf8" stroke-width="6" opacity="0.4"/>
+  <!-- Shelf Uprights -->
+  <path d="M160 140 L160 380" stroke="#94a3b8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M352 140 L352 380" stroke="#94a3b8" stroke-width="12" stroke-linecap="round"/>
+  <!-- Shelves -->
+  <path d="M140 190 L372 190" stroke="#38bdf8" stroke-width="16" stroke-linecap="round"/>
+  <path d="M140 270 L372 270" stroke="#38bdf8" stroke-width="16" stroke-linecap="round"/>
+  <path d="M140 350 L372 350" stroke="#38bdf8" stroke-width="16" stroke-linecap="round"/>
+  <!-- Stored items -->
+  <rect x="180" y="150" width="36" height="36" rx="8" fill="#38bdf8"/>
+  <rect x="230" y="156" width="30" height="30" rx="6" fill="#67e8f9"/>
+  <rect x="290" y="146" width="44" height="40" rx="8" fill="#0284c7"/>
+  <rect x="175" y="225" width="46" height="40" rx="8" fill="#0284c7"/>
+  <circle cx="256" cy="245" r="20" fill="#38bdf8"/>
+  <rect x="295" y="220" width="48" height="45" rx="8" fill="#0ea5e9"/>
+  <rect x="180" y="305" width="60" height="40" rx="8" fill="#0ea5e9"/>
+  <rect x="260" y="300" width="40" height="45" rx="8" fill="#38bdf8"/>
+  <!-- Scanner Beam -->
+  <line x1="120" y1="210" x2="392" y2="210" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
+</svg>
